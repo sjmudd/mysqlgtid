@@ -11,12 +11,26 @@ handled later.
 ### Usage
 
 ```
-import "github.com/sjmudd/mysqlgtid"
+package main
 
-int main() {
-    var gtidSet := "0a0bd206-4750-11ee-9a88-246e96822b80:1-100492614"
+import (
+	"fmt"
+	"github.com/sjmudd/mysqlgtid"
+)
 
-    fmt.Printf("gtidSet: %q, count: %d\n", gtidSet, mysqlgtid.TransactionCount(gtidSet))
+func main() {
+	gtidSet := "0a0bd206-4750-11ee-9a88-246e96822b80:1-100492614"
+
+	count, err := mysqlgtid.TransactionCount(gtidSet)
+	if err != nil {
+		fmt.Errorf("TransactionCount(%q) failed: %v",
+			gtidSet,
+			err,
+		)
+		return
+	}
+
+	fmt.Printf("gtidSet: %q, count: %d\n", gtidSet, count)
 }
 ```
 
