@@ -5,13 +5,15 @@ import (
 	"strings"
 )
 
-// convert <uuid>:<range> into <range>
+// convert <uuid>:<range> or <uuid>:<tag>:<range> into <range>.
 func transactionPart(uuid_range string) string {
 	parts := strings.Split(uuid_range, ":")
 	if len(parts) == 2 {
 		return parts[1]
+	} else if len(parts) == 3 {
+		return parts[2]
 	}
-	return ""
+	return "" // invalid so return nothing
 }
 
 // convert "1-100" -> 100, "1-10,100-110" -> 20, etc
