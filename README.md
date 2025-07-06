@@ -11,13 +11,12 @@ handled later.
 ### Usage
 
 ```
-    import "github.com/sjmudd/mysqlgtid"
+import "github.com/sjmudd/mysqlgtid"
 
-    int main() {
-        var gtidSet := "<uuid>:1-100"
+int main() {
+    var gtidSet := "0a0bd206-4750-11ee-9a88-246e96822b80:1-100492614"
 
-        fmt.Printf("gtidSet: %q, count: %d\n", gtidSet, mysqlgtid.TransactionCount(gtidSet))
-       }
+    fmt.Printf("gtidSet: %q, count: %d\n", gtidSet, mysqlgtid.TransactionCount(gtidSet))
 }
 ```
 
