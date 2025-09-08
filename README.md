@@ -8,7 +8,7 @@ on a system running with MySQL GTIDs.
 
 This is the MySQL GTID Spec:
 - https://dev.mysql.com/doc/refman/8.4/en/replication-gtids-concepts.html
-- https://dev.mysql.com/doc/refman/9.3/en/replication-gtids-concepts.html (latest 9.X at time of writing this)
+- https://dev.mysql.com/doc/refman/9.4/en/replication-gtids-concepts.html (latest 9.X at time of writing this, 2025-09)
 
 The current specs seem to imply that an *empty tag* is possible.
 This would allow a format of line such as `<uuid>::<range>` which feels
