@@ -4,6 +4,12 @@ MySQL does not expose a transaction count very explicitly.  This routine
 provides an easy way to calculate the number of transactions executed
 on a system running with MySQL GTIDs.
 
+Note: the counter is a counter of GTIDs (Global Transaction IDs) but GTIDs
+may have a few types of event that are not transactions. In practice tracking
+this counter as a proxy for the number of transactions for all practical
+purposes is as good as a transaction counter and often what monitoring
+systems want to watch.
+
 ### GTID Spec
 
 This is the MySQL GTID Spec:

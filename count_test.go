@@ -9,10 +9,10 @@ func TestSamples(t *testing.T) {
 	var samples = map[string]int64{
 		``:                                       0,
 		`011a7699-9e72-11ea-9234-246e96b3f01c:1`: 1,
-		`011a7699-9e72-11ea-9234-246e96b3f01c:1,2,3`:         3,
+		`011a7699-9e72-11ea-9234-246e96b3f01c:1:2:3`:         3,
 		`011a7699-9e72-11ea-9234-246e96b3f01c:1-100`:         100,
 		`011a7699-9e72-11ea-9234-246e96b3f01c:201-300`:       100,
-		`011a7699-9e72-11ea-9234-246e96b3f01c:1-100,201-300`: 200,
+		`011a7699-9e72-11ea-9234-246e96b3f01c:1-100:201-300`: 200,
 		`011a7699-9e72-11ea-9234-246e96b3f01c:1-271229896`:   271229896,
 		`011a7699-9e72-11ea-9234-246e96b3f01c:1-271229896,
 019a9028-fb64-11e9-8a8a-20677c089600:1-276903885`: 548133781,
@@ -139,6 +139,18 @@ ff40b05a-6cbb-11ed-a760-e4434b26c9c8:1-893681160`: 55332525043,
 011a7699-9e72-11ea-9234-246e96b3f01c:tag1:1-1000`: 2000,
 		`011a7699-9e72-11ea-9234-246e96b3f01c:1-1000,
 011a7699-9e72-11ea-9234-246e96b3f01c::1-2000`: 3000,
+		// multiple intervals for the same uuid, colon separated (MySQL compact notation)
+		`011a7699-9e72-11ea-9234-246e96b3f01c:1-3:11:47-49`: 7,
+		// tag followed by multiple colon-separated intervals
+		`011a7699-9e72-11ea-9234-246e96b3f01c:Domain_1:1-3:11:47-49`: 7,
+		// multiple tagged uuid_sets for the same uuid
+		`011a7699-9e72-11ea-9234-246e96b3f01c:Domain_1:1-3:15-21,
+011a7699-9e72-11ea-9234-246e96b3f01c:Domain_2:8-52`: 55,
+		// different uuids on a single line, comma separated, no newline
+		`011a7699-9e72-11ea-9234-246e96b3f01c:1-3,019a9028-fb64-11e9-8a8a-20677c089600:1-10`: 13,
+		// mix of tagged and untagged uuid_sets
+		`011a7699-9e72-11ea-9234-246e96b3f01c:1-5,
+019a9028-fb64-11e9-8a8a-20677c089600:Analytics_1:10-14`: 10,
 	}
 
 	if len(samples) == 0 {
@@ -152,5 +164,34 @@ ff40b05a-6cbb-11ed-a760-e4434b26c9c8:1-893681160`: 55332525043,
 		} else if expected != actual {
 			t.Errorf("- FAIL: TransactionCount(%q) returned: %d, expected: %d", gtidSet, actual, expected)
 		}
+	}
+}
+
+// TestInvalidSamples checks that malformed or semantically invalid GTID sets
+// are rejected with an error rather than silently producing a wrong count.
+func TestInvalidSamples(t *testing.T) {
+	var invalidSamples = map[string]string{
+		"missing_uuid":               `1-10`,
+		"comma_between_intervals":    `011a7699-9e72-11ea-9234-246e96b3f01c:1-3,11-20`,
+		"reversed_range":             `011a7699-9e72-11ea-9234-246e96b3f01c:20-10`,
+		"zero_transaction_id":        `011a7699-9e72-11ea-9234-246e96b3f01c:0`,
+		"missing_tagged_interval":    `011a7699-9e72-11ea-9234-246e96b3f01c:Domain_1`,
+		"invalid_tag":                `011a7699-9e72-11ea-9234-246e96b3f01c:123tag:1-10`,
+		"invalid_uuid":               `not-a-uuid:1-10`,
+		"transaction_id_overflow":    `011a7699-9e72-11ea-9234-246e96b3f01c:1-9223372036854775808`,
+		"empty_entry_between_commas": `011a7699-9e72-11ea-9234-246e96b3f01c:1-10,,019a9028-fb64-11e9-8a8a-20677c089600:1-10`,
+	}
+
+	if len(invalidSamples) == 0 {
+		t.Errorf("BUG: no invalid samples")
+	}
+
+	for name, gtidSet := range invalidSamples {
+		t.Run(name, func(t *testing.T) {
+			actual, err := TransactionCount(gtidSet)
+			if err == nil {
+				t.Errorf("- FAIL: TransactionCount(%q) expected an error, got count: %d", gtidSet, actual)
+			}
+		})
 	}
 }
